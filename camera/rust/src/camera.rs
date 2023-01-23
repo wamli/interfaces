@@ -460,6 +460,9 @@ pub trait Camera {
     }
     /// provide an image based on a given configuration
     async fn capture(&self, ctx: &Context, arg: &Configuration) -> RpcResult<Image>;
+    /// in case streaming is activated (fps > 0), stop it
+    /// in case fps == 0, this operation as not effect
+    async fn stop_streaming(&self, ctx: &Context) -> RpcResult<()>;
 }
 
 /// CameraReceiver receives messages defined in the Camera service trait
@@ -478,6 +481,11 @@ pub trait CameraReceiver: MessageDispatch + Camera {
                 let mut e = wasmbus_rpc::cbor::vec_encoder(true);
                 encode_image(&mut e, &resp)?;
                 let buf = e.into_inner();
+                Ok(buf)
+            }
+            "StopStreaming" => {
+                let _resp = Camera::stop_streaming(self, ctx).await?;
+                let buf = Vec::new();
                 Ok(buf)
             }
             _ => Err(RpcError::MethodNotHandled(format!(
@@ -554,5 +562,23 @@ impl<T: Transport + std::marker::Sync + std::marker::Send> Camera for CameraSend
         let value: Image = wasmbus_rpc::common::decode(&resp, &decode_image)
             .map_err(|e| RpcError::Deser(format!("'{}': Image", e)))?;
         Ok(value)
+    }
+    #[allow(unused)]
+    /// in case streaming is activated (fps > 0), stop it
+    /// in case fps == 0, this operation as not effect
+    async fn stop_streaming(&self, ctx: &Context) -> RpcResult<()> {
+        let buf = *b"";
+        let resp = self
+            .transport
+            .send(
+                ctx,
+                Message {
+                    method: "Camera.StopStreaming",
+                    arg: Cow::Borrowed(&buf),
+                },
+                None,
+            )
+            .await?;
+        Ok(())
     }
 }

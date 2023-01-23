@@ -1,5 +1,5 @@
 [package]
-name = "camera"
+name = "wasmcloud_interface_camera"
 version = "0.1.0"
 description = "Interface library for the camera camera capability, "
 authors = [ "dev@example.com" ]

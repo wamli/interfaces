@@ -23,7 +23,7 @@ use org.wasmcloud.model#Unit
     )
 service Camera {
   version: "0.1",
-  operations: [ Capture ]
+  operations: [ Capture, StreamOn, StreamOff ]
 }
 
 /// provide an image based on a given configuration
@@ -31,6 +31,14 @@ operation Capture {
     input: Configuration,
     output: Image,
 }
+
+/// in case streaming is activated (fps > 0), stop it
+/// in case fps == 0, this operation has no effect
+operation StreamOn {
+    input: Configuration
+}
+
+operation StreamOff {}
 
 structure Configuration {
     /// the image format, e.g. MJPEG or YUYV
@@ -44,10 +52,12 @@ structure Configuration {
     resolution: Resolution,
 
     /// in frames per second (fps), 0 is for 'one shot'
+    /// this parameter shall be ignored for the 'Capture' operation
     @n(2)
     framerate: U8,
 
     /// e.g. '/dev/video0'
+    /// if this parameter not provided, an assumption is made
     @n(3)
     device: String,
 }
